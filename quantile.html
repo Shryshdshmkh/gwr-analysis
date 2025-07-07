@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantile Regression in R</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .math-equation {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            font-family: "Courier New", Courier, monospace;
+            overflow-x: auto;
+        }
+        .sidebar {
+            position: sticky;
+            top: 1rem;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                position: static;
+                margin-bottom: 2rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <header class="mb-10 text-center">
+            <h1 class="text-4xl font-bold text-indigo-700 mb-2">Quantile Regression in R</h1>
+            <p class="text-xl text-gray-600">Understanding conditional quantiles with mathematical foundations</p>
+        </header>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Main Content -->
+            <div class="lg:w-3/4">
+                <!-- Introduction Section -->
+                <section class="mb-12 bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-2xl font-semibold text-indigo-600 mb-4 flex items-center">
+                        <i class="fas fa-info-circle mr-2"></i> Introduction to Quantile Regression
+                    </h2>
+                    <p class="mb-4">Quantile regression is a type of regression analysis used in statistics and econometrics. While ordinary least squares (OLS) regression estimates the conditional mean of the dependent variable, quantile regression estimates the conditional median or other quantiles.</p>
+                    
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                        <p class="font-medium text-blue-800">Key advantage: Quantile regression is more robust to outliers and provides a more comprehensive view of the relationship between variables.</p>
+                    </div>
+                    
+                    <p>This technique is particularly useful when:</p>
+                    <ul class="list-disc pl-6 mb-4 space-y-1">
+                        <li>The relationship between variables changes across the distribution</li>
+                        <li>Outliers are present in the data</li>
+                        <li>Heteroscedasticity exists</li>
+                        <li>You need to understand the entire conditional distribution</li>
+                    </ul>
+                </section>
+
+                <!-- Mathematical Foundation -->
+                <section class="mb-12 bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-2xl font-semibold text-indigo-600 mb-4 flex items-center">
+                        <i class="fas fa-square-root-alt mr-2"></i> Mathematical Foundation
+                    </h2>
+                    
+                    <h3 class="text-xl font-medium text-gray-700 mb-3">1. Quantile Definition</h3>
+                    <p class="mb-4">For a random variable Y with cumulative distribution function F(y) = P(Y ≤ y), the τ-th quantile Q(τ) is defined as:</p>
+                    <div class="math-equation bg-gray-100 p-4 rounded-lg mb-6">
+                        Q(τ) = inf{y : F(y) ≥ τ}, where τ ∈ (0,1)
+                    </div>
+                    
+                    <h3 class="text-xl font-medium text-gray-700 mb-3">2. Quantile Regression Model</h3>
+                    <p class="mb-4">The quantile regression model for the τ-th quantile can be expressed as:</p>
+                    <div class="math-equation bg-gray-100 p-4 rounded-lg mb-4">
+                        Q<sub>τ</sub>(Y|X = x) = x<sup>T</sup>β(τ)
+                    </div>
+                    <p class="mb-4">Where:</p>
+                    <ul class="list-disc pl-6 mb-4 space-y-1">
+                        <li>Q<sub>τ</sub>(Y|X = x) is the conditional τ-th quantile of Y given X = x</li>
+                        <li>x is the vector of explanatory variables</li>
+                        <li>β(τ) is the vector of coefficients for the τ-th quantile</li>
+                    </ul>
+                    
+                    <h3 class="text-xl font-medium text-gray-700 mb-3">3. Estimation</h3>
+                    <p class="mb-4">The coefficients β(τ) are estimated by minimizing the following loss function:</p>
+                    <div class="math-equation bg-gray-100 p-4 rounded-lg mb-4">
+                        min<sub>β</sub> ∑<sub>i=1</sub><sup>n</sup> ρ<sub>τ</sub>(y<sub>i</sub> - x<sub>i</sub><sup>T</sup>β)
+                    </div>
+                    <p class="mb-2">Where ρ<sub>τ</sub> is the check function (also called pinball loss):</p>
+                    <div class="math-equation bg-gray-100 p-4 rounded-lg">
+                        ρ<sub>τ</sub>(u) = u(τ - I(u < 0)) = {
+                            <span class="block ml-4">τu if u ≥ 0</span>
+                            <span class="block ml-4">(τ - 1)u if u < 0</span>
+                        }
+                    </div>
+                </section>
+
+                <!-- R Implementation -->
+                <section class="mb-12 bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-2xl font-semibold text-indigo-600 mb-4 flex items-center">
+                        <i class="fas fa-code mr-2"></i> Implementation in R
+                    </h2>
+                    
+                    <h3 class="text-xl font-medium text-gray-700 mb-3">1. Using the quantreg Package</h3>
+                    <p class="mb-4">The most common package for quantile regression in R is <span class="font-mono bg-gray-200 px-2 py-1 rounded">quantreg</span> by Roger Koenker.</p>
+                    
+                    <div class="code-block mb-6">
+                        <pre># Install and load the package
+install.packages("quantreg")
+library(quantreg)
+
+# Load example data
+data(engel)
+head(engel)
+
+# Fit median regression (τ = 0.5)
+fit_median <- rq(foodexp ~ income, data = engel, tau = 0.5)
+summary(fit_median)
+
+# Fit multiple quantiles
+fit_multi <- rq(foodexp ~ income, data = engel, tau = c(0.1, 0.25, 0.5, 0.75, 0.9))
+summary(fit_multi)
+
+# Plot the results
+plot(engel$income, engel$foodexp, 
+     xlab = "Income", ylab = "Food Expenditure",
+     main = "Quantile Regression")
+for(i in 1:length(c(0.1, 0.25, 0.5, 0.75, 0.9))) {
+    abline(coef(fit_multi)[,i], col = i+1)
+}
+legend("topleft", legend = c("0.1", "0.25", "0.5", "0.75", "0.9"),
+       col = 2:6, lty = 1, title = "Quantiles")</pre>
+                    </div>
+                    
+                    <h3 class="text-xl font-medium text-gray-700 mb-3">2. Visualizing Results</h3>
+                    <p class="mb-4">Visualizing multiple quantile regressions helps understand how relationships change across the distribution:</p>
+                    
+                    <div class="code-block mb-4">
+                        <pre># Plot all quantile regression lines
+library(ggplot2)
+
+ggplot(engel, aes(income, foodexp)) +
+  geom_point(alpha = 0.5) +
+  geom_quantile(quantiles = c(0.1, 0.25, 0.5, 0.75, 0.9), 
+                aes(color = factor(..quantile..))) +
+  scale_color_viridis_d(name = "Quantile") +
+  labs(title = "Quantile Regression of Food Expenditure vs Income",
+       x = "Income", y = "Food Expenditure") +
+  theme_minimal()</pre>
+                    </div>
+                    
+                    <h3 class="text-xl font-medium text-gray-700 mb-3">3. Hypothesis Testing</h3>
+                    <p class="mb-4">The quantreg package provides methods for hypothesis testing:</p>
+                    
+                    <div class="code-block">
+                        <pre># Test for equality of slopes across quantiles
+anova(fit_multi)
+
+# Test if a coefficient is equal across quantiles
+summary(fit_multi, se = "boot")</pre>
+                    </div>
+                </section>
+
+                <!-- Applications -->
+                <section class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-2xl font-semibold text-indigo-600 mb-4 flex items-center">
+                        <i class="fas fa-chart-line mr-2"></i> Applications
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                            <h3 class="font-medium text-green-800 mb-2">Economics</h3>
+                            <p class="text-sm">Studying wage determinants across income distribution, analyzing Engel curves for different expenditure quantiles.</p>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                            <h3 class="font-medium text-blue-800 mb-2">Medicine</h3>
+                            <p class="text-sm">Analyzing growth charts where different quantiles represent different percentiles of child growth.</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                            <h3 class="font-medium text-purple-800 mb-2">Environmental Science</h3>
+                            <p class="text-sm">Modeling extreme weather events by focusing on upper quantiles of temperature or precipitation distributions.</p>
+                        </div>
+                        <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                            <h3 class="font-medium text-yellow-800 mb-2">Finance</h3>
+                            <p class="text-sm">Value at Risk (VaR) calculations and other risk management applications that focus on tail behavior.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="lg:w-1/4">
+                <div class="sidebar">
+                    <!-- Key Concepts -->
+                    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                        <h3 class="text-lg font-semibold text-indigo-600 mb-3 flex items-center">
+                            <i class="fas fa-key mr-2"></i> Key Concepts
+                        </h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>Estimates conditional quantiles rather than conditional mean</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>More robust to outliers than OLS</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>Doesn't assume homoscedasticity</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>Can reveal relationships that OLS might miss</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Resources -->
+                    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                        <h3 class="text-lg font-semibold text-indigo-600 mb-3 flex items-center">
+                            <i class="fas fa-book mr-2"></i> Resources
+                        </h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-start">
+                                <i class="fas fa-external-link-alt text-blue-500 mt-1 mr-2"></i>
+                                <a href="https://cran.r-project.org/web/packages/quantreg/index.html" class="text-blue-600 hover:underline">quantreg package documentation</a>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-book text-blue-500 mt-1 mr-2"></i>
+                                <a href="https://www.springer.com/gp/book/9783642199581" class="text-blue-600 hover:underline">Koenker (2005) Quantile Regression</a>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-file-pdf text-blue-500 mt-1 mr-2"></i>
+                                <a href="https://www.econ.uiuc.edu/~roger/research/rq/rq.pdf" class="text-blue-600 hover:underline">Roger Koenker's papers</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Quick Reference -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-indigo-600 mb-3 flex items-center">
+                            <i class="fas fa-lightbulb mr-2"></i> Quick Reference
+                        </h3>
+                        <div class="space-y-3">
+                            <div>
+                                <h4 class="font-medium text-gray-700">Basic Syntax:</h4>
+                                <div class="code-block text-sm mt-1">
+                                    rq(formula, data, tau)
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-700">Common Arguments:</h4>
+                                <ul class="text-sm space-y-1 mt-1">
+                                    <li><span class="font-mono">tau</span>: Quantile(s) to estimate (0 < τ < 1)</li>
+                                    <li><span class="font-mono">se</span>: Method for standard errors ("iid", "nid", "ker", "boot")</li>
+                                    <li><span class="font-mono">method</span>: Fitting method ("br", "fn", "pfn", "lasso")</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-700">Useful Functions:</h4>
+                                <ul class="text-sm space-y-1 mt-1">
+                                    <li><span class="font-mono">summary()</span>: Summary of results</li>
+                                    <li><span class="font-mono">predict()</span>: Make predictions</li>
+                                    <li><span class="font-mono">anova()</span>: Compare models</li>
+                                    <li><span class="font-mono">plot()</span>: Diagnostic plots</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-12 pt-6 border-t border-gray-200 text-center text-gray-600">
+            <p>Quantile regression provides a more complete picture of relationships in your data by modeling different points in the conditional distribution.</p>
+            <p class="mt-2">For more advanced topics, explore censored quantile regression, instrumental variables quantile regression, and Bayesian quantile regression.</p>
+        </footer>
+    </div>
+</body>
+</html>
